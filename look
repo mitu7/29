@@ -1,0 +1,219 @@
+// 初始化，检查是否开启无障碍
+auto.waitFor()
+
+var advanceTime = new Date().getTime()
+var theTime = new Date()
+var month = padStart(theTime.getMonth() + 1)
+var setTime = rawInput(
+    "请输入执行时间，若不输入，将立即执行",
+    theTime.getFullYear().toString() + '/' + month + '/' + padStart(theTime.getDay()) + ' ' + padStart(theTime.getHours()) + ':' + padStart(theTime.getMinutes()) + ':' + padStart(theTime.getSeconds())
+)
+
+// 获取淘宝服务器的时间，用于修正
+var taobaoTime = http.get('http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp')
+if(setTime){
+    advanceTime = (new Date(setTime)).getTime()//获得期望时间毫秒值
+}
+
+var taobaoJson = JSON.parse(taobaoTime.body.string())
+needTime = new Date().getTime() - Number(taobaoJson.data.t)
+if(needTime != 0){
+    toast('与淘宝服务器相差' + (needTime / 1000).toFixed(2).toString() + '秒，将对时间进行修正')
+}
+
+console.show();
+log(needTime);
+// 打开手机淘宝
+launchApp("淘宝特价版")
+//car = desc("购物车").findOne()
+//car.click()
+
+run()
+
+//获取期望时间和当前时间的差值，
+//若小于0则执行，否则等待
+function run(){
+    // 每五秒检测一下是不是在购物车页面了，提醒一下
+    setInterval(checkOuting, 5000)
+    var times = 0;
+    while(true){
+        var date = new Date().getTime();//获得当前时间的毫秒
+        var duration = advanceTime - date + needTime;
+        
+        if(duration <= 0){
+            sleep(850);//900 or 1000 +10:01s
+            //7以上  675ms; 6 800ms; 5以下 850ms
+            //6=350Ms 
+            //! 3=300多 400多
+            checkOut()
+            break
+        }//else{
+            // log(advanceTime - date + "ms")
+            //times++
+            //if(times % 50 === 0){
+            //    toast('还有约' + (duration / 1000).toFixed(2).toString() + '秒')
+           // }
+            //sleep(100)
+        //}
+    }
+}
+
+function checkOuting(){
+    var checkButton = text("结算").findOnce()
+    var checkContainsButton = textContains("结算").findOnce()
+    if(!checkButton && !checkContainsButton){
+        toast("请先打开淘宝的购物车页面")
+        return false
+    }
+    if(checkButton){
+        toast("请先选中任意一样你需要提交的物品")
+        return false
+    }
+    return checkContainsButton
+}
+
+function checkOut(){
+    var checkOut = checkOuting()
+    if(checkOut){
+        // 自动点击
+        checkOut.click()
+        //sleep(200)
+       
+        //如果出现提交订单 就点击
+        while(true){             
+            if(textContains("提交订单").exists()){
+                  var date = new Date().getTime();
+                  log('加载完成'+(date-needTime));
+                //var taobaoTime = http.get('http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp')
+                //var taobaoJson = JSON.parse(taobaoTime.body.string())
+//var taotao = Number(taobaoJson.data.t)
+//toast(taotao);
+exit()
+                textContains("提交订单").click();
+                //var taobaoTime = http.get('http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp')
+//var taobaoJson = JSON.parse(taobaoTime.body.string())
+//var taotao = Number(taobaoJson.data.t)
+//toast(taotao);
+                log('提交完成'+(new Date().getTime() - needTime));
+                //sleep(1000);
+                
+                break;
+            }else{
+                sleep(1);
+            }
+        }
+        
+        //log(new Date().getTime() + needTime);
+        while(true){
+             if(textContains("支付宝").exists() && !textContains("余额").exists()){
+                 log(new Date().getTime() - needTime);
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+        
+        
+        while(true){
+             if(textContains("立即付款").exists()){
+                 log('立即付款'+(new Date().getTime() - needTime));
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+        
+        while(true){
+             if(textContains("账户余额").exists()){
+                 log(new Date().getTime() - needTime);
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+
+        log("结算成功")
+        log(needTime)
+        exit()
+    }else{
+        toast("结算时遇到错误")
+        exit()
+    }
+}
+
+
+function checkOut(){
+    while(true){
+    var checkOut = checkOuting()
+    if(checkOut){
+        log('点击'+(new Date().getTime() - needTime));
+        // 自动点击
+        checkOut.click()
+        //sleep(200)
+       
+        //如果出现提交订单 就点击
+        while(true){      
+            if(textContains("提交订单").exists()){
+                if(textContains("¥ 1.00").exists()){
+                    textContains("提交订单").click();
+                    log('提交完成'+(new Date().getTime() - needTime)); 
+        while(true){
+             if(textContains("支付宝").exists() && !textContains("余额").exists()){
+                 log(new Date().getTime() - needTime);
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+        
+        
+        while(true){
+             if(textContains("立即付款").exists()){
+                 log('立即付款'+(new Date().getTime() - needTime));
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+        
+        while(true){
+             if(textContains("账户余额").exists()){
+                 log(new Date().getTime() - needTime);
+                 //log(new Date().getTime() + needTime);
+                 break;
+                 } 
+        }
+
+        log("结算成功")
+        log(needTime)
+        exit()             
+                    }else{
+                        back()
+                        break;
+                        }
+                  var date = new Date().getTime();
+                  log('加载完成'+(date-needTime));
+                //var taobaoTime = http.get('http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp')
+                //var taobaoJson = JSON.parse(taobaoTime.body.string())
+//var taotao = Number(taobaoJson.data.t)
+//toast(taotao);
+exit()
+            }else{
+                sleep(1);
+            }
+        }
+        
+        //log(new Date().getTime() + needTime);
+        
+    }else{
+        toast("结算时遇到错误")
+        exit()
+    }
+    }
+}
+
+// 时间格式化
+
+function padStart(month){
+    if(month < 10){
+        month = '0' + month.toString()
+    }else{
+        month = month.toString()
+    }
+    return month
+}
